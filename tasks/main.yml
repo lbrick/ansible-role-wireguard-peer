@@ -1,0 +1,58 @@
+---
+- name: Add WireGuard package
+  ansible.builtin.package:
+    name:
+      - wireguard-tools
+    state: latest
+
+- name: Check if WireGuard private key file exists
+  ansible.builtin.stat:
+    path: "{{ wireguard_private_key_file }}"
+  register: wg_key_stat
+
+- name: Generate WireGuard private key
+  ansible.builtin.shell: >-
+    wg genkey | sudo tee {{ wireguard_private_key_file }}
+  when: not wg_key_stat.stat.exists
+
+- name: Generate WireGuard public key
+  ansible.builtin.shell: >-
+    cat {{ wireguard_private_key_file }} | wg pubkey | sudo tee {{ wireguard_public_key_file }}
+  when: not wg_key_stat.stat.exists
+
+- name: Read WireGuard public key
+  ansible.builtin.slurp:
+    src: "{{ wireguard_public_key_file }}"
+  register: wg_public_key_raw
+
+- name: Decode public key
+  ansible.builtin.set_fact:
+    wg_public_key: "{{ wg_public_key_raw.content | b64decode | trim }}"
+
+- name: Write WireGuard config
+  ansible.builtin.template:
+    src: wg0-client.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: Output WireGuard configuration in two lines
+  ansible.builtin.debug:
+    msg: |
+      wg_public_key={{ wg_public_key }}
+      wireguard_peer_ip={{ wireguard_peer_ip }}
+
+- name: Reminder to enable and start WireGuard manually
+  ansible.builtin.debug:
+    msg: |
+      WireGuard configuration complete.
+
+      To enable the service at boot and bring up the interface now, run:
+
+        sudo systemctl enable wg-quick@wg0
+        sudo systemctl start wg-quick@wg0
+
+      To bring up the interface now, run:
+      
+        sudo systemctl start wg-quick@wg0

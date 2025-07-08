@@ -1,0 +1,12 @@
+---
+wireguard_dir: /etc/wireguard
+wireguard_private_key_file: "{{ wireguard_dir }}/private.key"
+wireguard_public_key_file: "{{ wireguard_dir }}/public.key"
+
+wireguard_peer_name: workstation
+wireguard_peer_ip: 100.64.0.2/32
+
+wireguard_ip_range: 100.64.0.1/16
+
+wireguard_server_address: 163.7.145.91
+wireguard_server_listen_port: 51820

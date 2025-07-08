@@ -1,0 +1,9 @@
+[Interface]
+Address = {{ wireguard_peer_ip }}
+PostUp = wg set %i private-key {{ wireguard_private_key_file }}
+
+[Peer]
+PublicKey = {{ wg_public_key }}
+Endpoint = {{ wireguard_server_address }}:{{ wireguard_server_listen_port }}
+AllowedIPs = {{ wireguard_ip_range }}
+PersistentKeepalive = 25
